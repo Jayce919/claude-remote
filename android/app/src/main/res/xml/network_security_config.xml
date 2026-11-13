@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  正式包默认只允许 HTTPS。这里仅对 localhost 和模拟器宿主机（10.0.2.2）放行明文 HTTP，
+  方便本地调试。
+  如果你要在局域网里用明文 HTTP 直连电脑（例如 http://192.168.x.x:8787），
+  把自己的地址按同样方式加进下面的 domain-config。
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">localhost</domain>
+        <domain includeSubdomains="false">10.0.2.2</domain>
+    </domain-config>
+</network-security-config>

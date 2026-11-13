@@ -1,0 +1,56 @@
+{
+  "host": "127.0.0.1",
+  "port": 8787,
+  "token": "",
+  "claudePath": "C:/Users/YOUR_USERNAME/.local/bin/claude.exe",
+  "defaultCwd": "C:/Users/YOUR_USERNAME",
+  "defaultModel": "",
+  "defaultChannel": "deepseek",
+  "channels": {
+    "deepseek": {
+      "label": "DeepSeek 官方",
+      "models": [
+        "deepseek-flash",
+        "deepseek-v4-pro",
+        "deepseek-chat"
+      ]
+    },
+    "opencode": {
+      "label": "OpenCode 订阅",
+      "models": [
+        "claude-opus-5",
+        "claude-sonnet-5",
+        "claude-haiku-5-5"
+      ]
+    }
+  },
+  "defaultEffort": "",
+  "defaultPermissionMode": "auto",
+  "allowedLogins": [],
+  "models": [
+    "deepseek-v4-pro",
+    "deepseek-v4-flash-vision-exp",
+    "deepseek-flash",
+    "deepseek-chat",
+    "mimo-v2-pro",
+    "claude-sonnet",
+    "claude-sonnet-5",
+    "claude-opus-5",
+    "claude-haiku-5-5"
+  ],
+  "efforts": [
+    "low",
+    "medium",
+    "high",
+    "xhigh",
+    "max"
+  ],
+  "permissionModes": [
+    "auto",
+    "default",
+    "acceptEdits",
+    "plan",
+    "dontAsk"
+  ],
+  "idleTimeoutMs": 1800000
+}

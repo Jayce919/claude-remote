@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  桌面图标直接用 Claude 官方图案：底色是包内的 clay（#D97757），
+  前景是从 Claude Desktop 图标里抠出来的十二道星芒（mipmap-*dpi/ic_launcher_foreground.png）。
+  星芒占可视区 72dp 的 73.9%，与原图标里星芒占方块的比例一致。
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <!-- Android 13+ 主题图标：同一份星芒，按 alpha 着色 -->
+    <monochrome android:drawable="@mipmap/ic_launcher_foreground" />
+</adaptive-icon>
