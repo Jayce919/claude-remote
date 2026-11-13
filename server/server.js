@@ -1,5 +1,6 @@
 import http from 'node:http';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadConfig, applyUpstreamEnv } from './lib/config.js';
@@ -548,9 +549,21 @@ server.listen(config.port, config.host, () => {
   const base = upstream.ANTHROPIC_BASE_URL || '(未配置)';
   console.log('');
   console.log('  Claude Code 手机端服务已启动');
-  console.log(`  本机访问   http://${config.host}:${config.port}/`);
+  console.log(`  本机访问   http://127.0.0.1:${config.port}/`);
+  // 手机要填的地址：局域网和 tailnet 都列出来，省得用户自己去 ipconfig 里翻。
+  // 100.64.0.0/10 是 Tailscale 的保留段，单独标一下。
+  const addrs = Object.values(os.networkInterfaces())
+    .flat()
+    .filter((i) => i && i.family === 'IPv4' && !i.internal)
+    .map((i) => i.address);
+  const tailnet = addrs.filter((ip) => /^100\.(6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\./.test(ip));
+  const lan = addrs.filter((ip) => !tailnet.includes(ip));
+  for (const ip of lan) console.log(`  手机访问   http://${ip}:${config.port}/   （手机和电脑连同一个 Wi-Fi）`);
+  for (const ip of tailnet) console.log(`  手机访问   http://${ip}:${config.port}/   （装了 Tailscale）`);
+  if (!lan.length && !tailnet.length) {
+    console.log('  手机访问   （没找到可用地址：检查网络，或把 config.json 的 host 改成 0.0.0.0）');
+  }
   console.log(`  访问令牌   ${config.token}`);
-  console.log(`  手机访问   http://<tailscale-IP>:${config.port}/?token=${config.token}`);
   console.log(`  上游接口   ${base}`);
   console.log(`  工作目录   ${config.defaultCwd}`);
   console.log('');

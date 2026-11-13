@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Remote 快速开始</title>
+<style>
+  :root { --bg:#f9f9f7; --fg:#29261b; --muted:#726f69; --line:#e1e0d9; --clay:#b45433; --ok:#006300; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0b0b0b; --fg:#f5f4ef; --muted:#a09c91; --line:#313130; --clay:#d97757; --ok:#0ca30c; }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin:0 auto; padding:40px 20px; max-width:680px; background:var(--bg); color:var(--fg);
+    font: 16px/1.75 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  h1 { font-size:24px; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 32px; }
+  h2 { font-size:16px; margin:36px 0 10px; }
+  h2 span { color:var(--clay); margin-right:8px; }
+  p, li { color:var(--fg); }
+  code, pre {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size:14px;
+    background:rgba(0,0,0,.05); border-radius:6px;
+  }
+  @media (prefers-color-scheme: dark) { code, pre { background:rgba(255,255,255,.07); } }
+  code { padding:1px 5px; }
+  pre { padding:14px 16px; overflow:auto; line-height:1.6; }
+  ol, ul { padding-left:20px; }
+  li { margin:6px 0; }
+  .box { border-left:3px solid var(--clay); padding:2px 0 2px 14px; color:var(--muted); margin:16px 0; }
+  .ok { color:var(--ok); font-weight:600; }
+  hr { border:0; border-top:1px solid var(--line); margin:32px 0; }
+  footer { color:var(--muted); font-size:13px; margin-top:36px; }
+</style>
+</head>
+<body>
+
+<h1>Claude Remote 快速开始</h1>
+<p class="sub">用手机操作电脑上的 Claude Code</p>
+
+<h2><span>0</span>先确认两件事</h2>
+<ol>
+  <li>电脑上装了 <b>Node.js 22.5 或更高</b>（终端运行 <code>node -v</code> 能看到版本号）。没有就去 <a href="https://nodejs.org/">nodejs.org</a> 装 LTS 版。</li>
+  <li>电脑上的 Claude Code 能正常出结果：终端运行 <code>claude -p "hi"</code>，能看到回复。这一步不通过，后面都不会成功——本工具只是把已有的 Claude Code 接到手机上，不负责配置上游。</li>
+</ol>
+<p class="box">如果你用的是第三方 API 或中转：只要 <code>claude -p "hi"</code> 能出字，这里就不需要任何额外配置。</p>
+
+<h2><span>1</span>启动服务</h2>
+<p>Windows 双击 <b>启动服务.cmd</b>；macOS / Linux 在终端运行 <code>./start.sh</code>。</p>
+<p>首次启动会自动安装依赖（约 30 秒，需要联网）。之后窗口里会出现类似这样的内容：</p>
+<pre>  手机访问   http://192.168.1.5:8787/   （手机和电脑连同一个 Wi-Fi）
+  访问令牌   3fK9...（一长串）</pre>
+<p class="box">这个窗口要一直开着。关掉窗口，手机就连不上了。</p>
+
+<h2><span>2</span>手机装客户端</h2>
+<p>手机连上和电脑同一个 Wi-Fi，用手机浏览器打开上一步显示的地址，例如 <code>http://192.168.1.5:8787/</code>，点页面上的 <b>Claude-Remote.apk</b> 下载并安装。</p>
+<p>系统会提示「未知来源应用」，允许即可——这个安装包没有上架应用商店。</p>
+
+<h2><span>3</span>连上</h2>
+<p>打开 App，填两样东西，点「连接」：</p>
+<ul>
+  <li><b>服务地址</b>：上一步浏览器里那个地址，<code>http://192.168.1.5:8787</code></li>
+  <li><b>访问令牌</b>：启动窗口里「访问令牌」后面那一长串</li>
+</ul>
+<p class="ok">连上之后，手机上发的每条消息都由电脑上的 Claude Code 处理，可以正常读写文件、执行命令。</p>
+
+<hr>
+
+<h2>连不上怎么办</h2>
+<ul>
+  <li><b>手机打不开那个地址</b>：确认手机和电脑在同一个 Wi-Fi；Windows 第一次监听端口会弹防火墙提示，选「允许」。公司/学校网络常禁止设备互访，这种情况请用 Tailscale（见 README）。</li>
+  <li><b>提示 401 / 未授权</b>：令牌填错了。以启动窗口里的为准，改过 <code>server/config.json</code> 后要重启服务。</li>
+  <li><b>发消息报「余额 / 额度」</b>：这是上游 API 的问题，不是本工具。在电脑上跑 <code>claude -p hi</code> 确认。</li>
+  <li><b>发消息报 model 相关错误</b>：App 里选的模型你的上游不支持，换成「默认」或手填一个可用的模型名。</li>
+  <li><b>窗口闪一下就关</b>：多半是 Node 版本太旧或没装，按第 0 步检查。</li>
+</ul>
+
+<h2>安全提醒</h2>
+<p>这个服务能执行命令，等于把电脑的 shell 交给手机。启动后局域网内任何人都能看到这个端口，但<b>没有令牌进不来</b>。</p>
+<ul>
+  <li>不要把端口映射到公网</li>
+  <li>令牌不要发到群里、截图不要露出来</li>
+  <li>只在家里/自己的设备上用</li>
+</ul>
+
+<footer>详细说明（Tailscale、开机自启、systemd、Windows 计划任务）见仓库 README。</footer>
+
+</body>
+</html>
