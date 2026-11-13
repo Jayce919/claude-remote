@@ -1,5 +1,6 @@
 import http from 'node:http';
 import fs from 'node:fs';
+import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -533,33 +534,64 @@ const handleIncoming = (req, res) => {
 
 const server = http.createServer(handleIncoming);
 
+/**
+ * 端口被占用时顺延到下一个。
+ * Windows 上 0.0.0.0 和 127.0.0.1 可以同时 bind 同一个端口而不报错，结果是两个进程
+ * 分走流量——所以先探测再监听，避免「看起来起来了、连上的却是别的进程」。
+ */
+async function findFreePort(start, attempts = 10) {
+  for (let i = 0; i < attempts; i += 1) {
+    const port = start + i;
+    const busy = await new Promise((resolve) => {
+      const socket = net.connect({ host: '127.0.0.1', port });
+      const finish = (value) => {
+        socket.destroy();
+        resolve(value);
+      };
+      socket.setTimeout(400, () => finish(false));
+      socket.once('connect', () => finish(true));
+      socket.once('error', () => finish(false));
+    });
+    if (!busy) return port;
+  }
+  return 0;
+}
+
+const listenPort = (await findFreePort(config.port)) || config.port;
+if (listenPort !== config.port) {
+  console.log(`  端口 ${config.port} 已被占用（可能已经开着一个实例），改用 ${listenPort}。`);
+}
+
 // 备用入口：绑定 Tailscale IP，域名解析失败时手机可以直连这个地址。
 // 只监听 tailnet 网卡，不向局域网/公网暴露；令牌校验照旧。
 if (config.altHost) {
   const altServer = http.createServer(handleIncoming);
   altServer.on('error', (err) => {
-    console.warn(`  备用入口 ${config.altHost}:${config.port} 未启动：${err.message}`);
+    console.warn(`  备用入口 ${config.altHost}:${listenPort} 未启动：${err.message}`);
   });
-  altServer.listen(config.port, config.altHost, () => {
-    console.log(`  备用访问   http://${config.altHost}:${config.port}/`);
+  altServer.listen(listenPort, config.altHost, () => {
+    console.log(`  备用访问   http://${config.altHost}:${listenPort}/`);
   });
 }
 
-server.listen(config.port, config.host, () => {
+server.listen(listenPort, config.host, () => {
   const base = upstream.ANTHROPIC_BASE_URL || '(未配置)';
   console.log('');
   console.log('  Claude Code 手机端服务已启动');
-  console.log(`  本机访问   http://127.0.0.1:${config.port}/`);
-  // 手机要填的地址：局域网和 tailnet 都列出来，省得用户自己去 ipconfig 里翻。
-  // 100.64.0.0/10 是 Tailscale 的保留段，单独标一下。
+  console.log(`  本机访问   http://127.0.0.1:${listenPort}/`);
+  // 手机要填的地址：只列手机真能用的——局域网私有段和 tailnet。
+  // 代理软件（Clash 之类）的 TUN 网卡会冒出一个 198.18.x.x 的假地址，
+  // 手机打过去是不通的，所以按网段过滤，不按网卡名字猜。
   const addrs = Object.values(os.networkInterfaces())
     .flat()
     .filter((i) => i && i.family === 'IPv4' && !i.internal)
     .map((i) => i.address);
   const tailnet = addrs.filter((ip) => /^100\.(6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\./.test(ip));
-  const lan = addrs.filter((ip) => !tailnet.includes(ip));
-  for (const ip of lan) console.log(`  手机访问   http://${ip}:${config.port}/   （手机和电脑连同一个 Wi-Fi）`);
-  for (const ip of tailnet) console.log(`  手机访问   http://${ip}:${config.port}/   （装了 Tailscale）`);
+  const lan = addrs.filter(
+    (ip) => /^10\./.test(ip) || /^192\.168\./.test(ip) || /^172\.(1[6-9]|2\d|3[01])\./.test(ip),
+  );
+  for (const ip of lan) console.log(`  手机访问   http://${ip}:${listenPort}/   （手机和电脑连同一个 Wi-Fi）`);
+  for (const ip of tailnet) console.log(`  手机访问   http://${ip}:${listenPort}/   （装了 Tailscale）`);
   if (!lan.length && !tailnet.length) {
     console.log('  手机访问   （没找到可用地址：检查网络，或把 config.json 的 host 改成 0.0.0.0）');
   }
