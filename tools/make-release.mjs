@@ -47,10 +47,12 @@ fs.cpSync(path.join(root, 'server'), path.join(out, 'server'), {
 
 // 启动器与文档
 fs.cpSync(path.join(root, 'tools'), path.join(out, 'tools'), { recursive: true });
-for (const file of ['README.md', 'LICENSE', '快速开始.html', '启动服务.cmd', 'start.sh']) {
+for (const file of ['README.md', 'README.en.md', 'LICENSE', '快速开始.html', '启动服务.cmd', 'start.sh']) {
   const from = path.join(root, file);
   if (fs.existsSync(from)) fs.copyFileSync(from, path.join(out, file));
 }
+// README 里引用了截图，一起带上，解压后链接不会断
+fs.cpSync(path.join(root, 'docs/images'), path.join(out, 'docs/images'), { recursive: true });
 
 // 安装包放进服务端的静态目录，手机连上就能下载
 fs.copyFileSync(apk, path.join(out, 'server/public/Claude-Remote.apk'));
