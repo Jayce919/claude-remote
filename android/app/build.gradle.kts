@@ -13,8 +13,8 @@ android {
         minSdk = 26
         targetSdk = 35
         // versionCode 递增，保证能覆盖安装旧包
-        versionCode = 24
-        versionName = "1.22"
+        versionCode = 25
+        versionName = "1.0.0"
     }
 
     buildTypes {
